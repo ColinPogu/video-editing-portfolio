@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Colin Bustos - Video Editor</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#060608;--surface:#0e0e12;--surface2:#16161d;--text:#f0f0f0;--text2:#888;--accent:#e8613c;--accent2:#ff7f50;--glow:rgba(232,97,60,0.15)}
+html{scroll-behavior:smooth}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
+
+@keyframes float{
+  0%,100%{transform:translate(0,0) scale(1)}
+  33%{transform:translate(30px,-20px) scale(1.05)}
+  66%{transform:translate(-20px,15px) scale(0.95)}
+}
+@keyframes pulse-glow{
+  0%,100%{opacity:0.4}
+  50%{opacity:0.8}
+}
+@keyframes grain{
+  0%,100%{transform:translate(0,0)}
+  10%{transform:translate(-5%,-10%)}
+  30%{transform:translate(3%,5%)}
+  50%{transform:translate(-3%,10%)}
+  70%{transform:translate(8%,2%)}
+  90%{transform:translate(-2%,-5%)}
+}
+
+.bg-grain{position:fixed;top:-50%;left:-50%;width:200%;height:200%;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");animation:grain 8s steps(10) infinite;pointer-events:none;z-index:0;opacity:0.5}
+
+.bg-orbs{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);animation:float 20s ease-in-out infinite}
+.orb-1{width:500px;height:500px;background:radial-gradient(circle,rgba(232,97,60,0.12),transparent 70%);top:-10%;right:-5%;animation-delay:0s}
+.orb-2{width:400px;height:400px;background:radial-gradient(circle,rgba(139,92,246,0.08),transparent 70%);bottom:20%;left:-8%;animation-delay:-7s}
+.orb-3{width:350px;height:350px;background:radial-gradient(circle,rgba(232,97,60,0.06),transparent 70%);top:50%;right:30%;animation-delay:-14s}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:1rem 2.5rem;display:flex;justify-content:space-between;align-items:center;background:rgba(6,6,8,0.7);backdrop-filter:blur(24px) saturate(1.2);border-bottom:1px solid rgba(255,255,255,0.04)}
+nav .logo{font-size:1.2rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+nav ul{list-style:none;display:flex;gap:2.2rem}
+nav a{color:var(--text2);text-decoration:none;font-size:0.8rem;letter-spacing:1.5px;text-transform:uppercase;transition:color 0.3s}
+nav a:hover{color:var(--text)}
+
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 8%;position:relative;z-index:1}
+.hero-tag{font-size:0.75rem;letter-spacing:5px;text-transform:uppercase;color:var(--accent);margin-bottom:1.2rem;font-weight:500}
+.hero h1{font-size:clamp(2.8rem,7vw,5.5rem);font-weight:800;line-height:1.02;margin-bottom:1.5rem;letter-spacing:-1px}
+.hero h1 .line2{background:linear-gradient(135deg,var(--text2) 0%,#555 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:1.05rem;color:var(--text2);max-width:520px;margin-bottom:2.5rem;line-height:1.7}
+.hero-cta{display:inline-flex;align-items:center;gap:0.6rem;padding:1rem 2.2rem;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;text-decoration:none;font-weight:600;font-size:0.9rem;border-radius:6px;transition:transform 0.25s,box-shadow 0.25s;box-shadow:0 4px 20px rgba(232,97,60,0.2);width:fit-content}
+.hero-cta:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(232,97,60,0.35)}
+.hero-stats{display:flex;gap:3.5rem;margin-top:4rem;padding-top:2rem;border-top:1px solid rgba(255,255,255,0.06)}
+.stat-num{font-size:2.2rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-label{font-size:0.7rem;color:var(--text2);text-transform:uppercase;letter-spacing:1.5px;margin-top:0.2rem}
+
+section{padding:6rem 8%;position:relative;z-index:1}
+.section-tag{font-size:0.7rem;letter-spacing:5px;text-transform:uppercase;color:var(--accent);margin-bottom:0.8rem;font-weight:500}
+.section-title{font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:700;margin-bottom:1rem;letter-spacing:-0.5px}
+.section-desc{color:var(--text2);max-width:550px;margin-bottom:3rem;line-height:1.7}
+
+.carousel-wrap{position:relative}
+.carousel-row{display:flex;gap:1.2rem;overflow-x:auto;padding-bottom:1rem;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-behavior:smooth}
+.carousel-row::-webkit-scrollbar{display:none}
+.carousel-arrow{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(232,97,60,0.9);color:#fff;border:none;font-size:1.2rem;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;transition:background 0.3s,transform 0.3s;box-shadow:0 4px 20px rgba(0,0,0,0.5)}
+.carousel-arrow:hover{background:var(--accent2);transform:translateY(-50%) scale(1.1)}
+.carousel-arrow.left{left:-10px}
+.carousel-arrow.right{right:-10px}
+
+.short-card{flex:0 0 220px;scroll-snap-align:start;position:relative;border-radius:12px;overflow:hidden;background:var(--surface);aspect-ratio:9/16;cursor:pointer;transition:transform 0.3s,box-shadow 0.3s}
+.short-card:hover{transform:scale(1.03);box-shadow:0 8px 30px rgba(232,97,60,0.15)}
+.short-card img{width:100%;height:100%;object-fit:cover;transition:opacity 0.3s}
+.short-card video{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.3s}
+.short-card:hover video{opacity:1}
+.short-card:hover img{opacity:0}
+.card-info{position:absolute;bottom:0;left:0;right:0;padding:1.2rem;background:linear-gradient(transparent 0%,rgba(0,0,0,0.95) 100%);z-index:2}
+.card-category{display:inline-block;padding:0.2rem 0.6rem;background:rgba(232,97,60,0.2);color:var(--accent);font-size:0.6rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;border-radius:100px;margin-bottom:0.4rem}
+.card-info h3{font-size:0.95rem;font-weight:700;margin-bottom:0.25rem;line-height:1.2}
+.card-info p{font-size:0.72rem;color:var(--text2);line-height:1.4}
+
+.row-label{display:flex;align-items:center;gap:1rem;margin-top:3rem;margin-bottom:1.2rem}
+.row-label span{font-size:0.7rem;letter-spacing:4px;text-transform:uppercase;color:var(--text2)}
+.row-label::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.06)}
+
+.work-card{flex:0 0 min(480px,85vw);scroll-snap-align:start;position:relative;border-radius:12px;overflow:hidden;background:var(--surface);aspect-ratio:16/9;cursor:pointer;transition:transform 0.3s,box-shadow 0.3s}
+.work-card:hover{transform:scale(1.02);box-shadow:0 8px 30px rgba(232,97,60,0.12)}
+.work-card img{width:100%;height:100%;object-fit:cover;transition:opacity 0.3s}
+.work-card video{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.3s}
+.work-card:hover video{opacity:1}
+.work-card:hover img{opacity:0}
+
+.services{background:linear-gradient(180deg,var(--surface) 0%,var(--bg) 100%)}
+.services-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem}
+.service-card{padding:2rem;border-radius:12px;background:linear-gradient(145deg,var(--surface2),rgba(14,14,18,0.8));border:1px solid rgba(255,255,255,0.04);transition:border-color 0.3s,transform 0.3s,box-shadow 0.3s;position:relative;overflow:hidden}
+.service-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transition:opacity 0.3s}
+.service-card:hover{border-color:rgba(232,97,60,0.3);transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,0.4)}
+.service-card:hover::before{opacity:1}
+.service-icon{font-size:1.8rem;margin-bottom:1rem}
+.service-card h3{font-size:1.05rem;margin-bottom:0.5rem;font-weight:600}
+.service-card p{font-size:0.85rem;color:var(--text2);margin-bottom:1.2rem;line-height:1.6}
+.service-price{font-size:1.4rem;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.service-price span{font-size:0.78rem;color:var(--text2);font-weight:400;-webkit-text-fill-color:var(--text2)}
+
+.about-content{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:start}
+.about-text p{color:var(--text2);margin-bottom:1.2rem;font-size:0.92rem;line-height:1.7}
+.about-text p strong{color:var(--text)}
+.skills-grid{display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:1.5rem}
+.skill-tag{padding:0.35rem 0.9rem;background:rgba(232,97,60,0.06);border:1px solid rgba(232,97,60,0.12);border-radius:100px;font-size:0.75rem;color:var(--text2);transition:border-color 0.3s,color 0.3s}
+.skill-tag:hover{border-color:var(--accent);color:var(--accent)}
+.about-visual{display:flex;flex-direction:column;gap:1.5rem}
+.about-card{padding:1.5rem;background:linear-gradient(135deg,var(--surface),var(--surface2));border-radius:10px;border-left:3px solid var(--accent);transition:transform 0.3s}
+.about-card:hover{transform:translateX(6px)}
+.about-card h4{font-size:0.88rem;margin-bottom:0.3rem;font-weight:600}
+.about-card p{font-size:0.8rem;color:var(--text2);line-height:1.6}
+
+.poster-section{padding:4rem 8%;position:relative;z-index:1;display:flex;justify-content:center}
+.poster-wrap{position:relative;max-width:420px;width:100%;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.6),0 0 80px rgba(232,97,60,0.08)}
+.poster-wrap img{width:100%;display:block}
+.poster-glow{position:absolute;inset:-2px;border-radius:18px;background:linear-gradient(135deg,rgba(232,97,60,0.2),transparent 40%,transparent 60%,rgba(232,97,60,0.1));pointer-events:none;animation:pulse-glow 4s ease-in-out infinite}
+
+.cta-section{text-align:center;padding:8rem 8%;position:relative;z-index:1}
+.cta-section::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(232,97,60,0.06),transparent 70%);pointer-events:none}
+.cta-section h2{font-size:clamp(2rem,4.5vw,3.2rem);font-weight:800;margin-bottom:1rem;letter-spacing:-0.5px}
+.cta-section p{color:var(--text2);margin-bottom:2.5rem;font-size:1.05rem}
+.cta-buttons{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
+.cta-btn{padding:1rem 2.5rem;font-size:0.88rem;font-weight:600;border-radius:6px;text-decoration:none;transition:transform 0.25s,box-shadow 0.25s}
+.cta-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 4px 20px rgba(232,97,60,0.2)}
+.cta-secondary{background:transparent;color:var(--text);border:1px solid rgba(255,255,255,0.12)}
+.cta-btn:hover{transform:translateY(-3px)}
+.cta-primary:hover{box-shadow:0 12px 40px rgba(232,97,60,0.35)}
+.cta-secondary:hover{border-color:rgba(255,255,255,0.3)}
+
+.free-badge{display:inline-block;padding:0.35rem 1rem;background:linear-gradient(135deg,rgba(232,97,60,0.15),rgba(255,127,80,0.1));color:var(--accent);font-size:0.68rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;border-radius:100px;margin-bottom:1.2rem;border:1px solid rgba(232,97,60,0.15)}
+
+footer{padding:2rem 8%;border-top:1px solid rgba(255,255,255,0.04);display:flex;justify-content:space-between;align-items:center;font-size:0.78rem;color:var(--text2);position:relative;z-index:1}
+footer a{color:var(--accent);text-decoration:none;transition:color 0.3s}
+footer a:hover{color:var(--accent2)}
+
+.divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(232,97,60,0.2),transparent);margin:0}
+
+@media(max-width:768px){
+  nav ul{gap:1.2rem}
+  nav a{font-size:0.72rem}
+  .hero{padding:0 5%}
+  .hero-stats{flex-direction:column;gap:1.5rem}
+  section{padding:4rem 5%}
+  .about-content{grid-template-columns:1fr}
+  .short-card{flex:0 0 160px}
+  .carousel-arrow{width:36px;height:36px;font-size:1rem}
+  .carousel-arrow.left{left:-4px}
+  .carousel-arrow.right{right:-4px}
+}
+
+@media(max-width:480px){
+  nav{padding:0.8rem 1rem}
+  nav ul{display:none}
+  .short-card{flex:0 0 140px}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-grain"></div>
+<div class="bg-orbs">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+
+<nav>
+  <div class="logo">Colin Bustos</div>
+  <ul>
+    <li><a href="#work">Work</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <div class="hero-tag">Video Editor / Content Producer</div>
+  <h1>I edit videos<br><span class="line2">that people watch.</span></h1>
+  <p>Fast turnaround, clean results, rates that make sense. Short-form, long-form, motion graphics -- raw footage to published.</p>
+  <a href="#contact" class="hero-cta">Get a free trial edit &rarr;</a>
+  <div class="hero-stats">
+    <div><div class="stat-num">1,000+</div><div class="stat-label">Videos delivered</div></div>
+    <div><div class="stat-num">4h</div><div class="stat-label">Short-form turnaround</div></div>
+    <div><div class="stat-num">24h</div><div class="stat-label">Long-form turnaround</div></div>
+    <div><div class="stat-num">5</div><div class="stat-label">Years editing</div></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="work">
+  <div class="section-tag">Portfolio</div>
+  <h2 class="section-title">Recent work</h2>
+  <p class="section-desc">Hover to preview. Use the arrows to browse.</p>
+
+  <div class="carousel-wrap">
+    <button class="carousel-arrow left" onclick="this.parentElement.querySelector('.carousel-row').scrollBy({left:-260,behavior:'smooth'})">&larr;</button>
+    <div class="carousel-row" id="shorts-row">
+      <div class="short-card" onmouseenter="this.querySelector('video').play()" onmouseleave="this.querySelector('video').pause();this.querySelector('video').currentTime=0">
+        <img src="assets/thumbnails/sf_ambition.jpg" alt="Black Ambition">
+        <video src="assets/clips/sf_ambition.mp4" muted loop playsinline></video>
+        <div class="card-info"><div class="card-category">Brand Film</div><h3>Black Ambition</h3><p>Cinematic brand story with motion graphics and dynamic transitions</p></div>
+      </div>
+      <div class="short-card" onmouseenter="this.querySelector('video').play()" onmouseleave="this.querySelector('video').pause();this.querySelector('video').currentTime=0">
+        <img src="assets/thumbnails/short1.jpg" alt="Fire Force Recap">
+        <video src="assets/clips/short1.mp4" muted loop playsinline></video>
+        <div class="card-info"><div class="card-category">Anime</div><h3>Fire Force Recap</h3><p>Fast-paced anime recap with karaoke captions and motion FX</p></div>
+      </div>
+      <div class="short-card" onmouseenter="this.querySelector('video').play()" onmouseleave="this.querySelector('video').pause();this.querySelector('video').currentTime=0">
+        <img src="assets/thumbnails/sf_promo.jpg" alt="Product Showcase">
+        <video src="assets/clips/sf_promo.mp4" muted loop playsinline></video>
+        <div class="card-info"><div class="card-category">Promo</div><h3>Product Showcase</h3><p>Clean product reveal with text overlays and hook-first pacing</p></div>
+      </div>
+      <div class="short-card" onmouseenter="this.querySelector('video').play()" onmouseleave="this.querySelector('video').pause();this.querySelector('video').currentTime=0">
+        <img src="assets/thumbnails/sf_pitch.jpg" alt="Startup Pitch">
+        <video src="assets/clips/sf_pitch.mp4" muted loop playsinline></video>
+        <div class="card-info"><div class="card-category">Business</div><h3>Startup Pitch</h3><p>Punchy value proposition edit for social media distribution</p></div>
+      </div>
+      <div class="short-card" onmouseenter="this.querySelector('video').play()" onmouseleave="this.querySelector('video').pause();this.querySelector('video').currentTime=0">
+        <img src="assets/thumbnails/sf_hook.jpg" alt="Engagement Hook">
+        <video src="assets/clips/sf_hook.mp4" muted loop playsinline></video>
+        <div class="card-info"><div class="card-category">Social</div><h3>Engagement Hook</h3><p>Scroll-stopping first 3 seconds with bold text and sound design</p></div>
+      </div>
+      <div class="short-card" onmouseenter="this.querySelector('video').play()" onmouseleave="this.querySelector('video').pause();this.querySelector('video').currentTime=0">
+        <img src="assets/thumbnails/video1.jpg" alt="Brand Awareness">
+        <video src="assets/clips/clip1.mp4" muted loop playsinline></video>
+        <div class="card-info"><div class="card-category">Motion</div><h3>Brand Awareness</h3><p>Animated infographic short with custom motion graphics</p></div>
+      </div>
+      <div class="short-card" onmouseenter="this.querySelector('video').play()" onmouseleave="this.querySelector('video').pause();this.querySelector('video').currentTime=0">
+        <img src="assets/thumbnails/video2.jpg" alt="Tech Review">
+        <video src="assets/clips/clip2.mp4" muted loop playsinline></video>
+        <div class="card-info"><div class="card-category">Tech</div><h3>AI Product Review</h3><p>Tech product walkthrough with screen capture and voiceover edit</p></div>
+      </div>
+      <div class="short-card" onmouseenter="this.querySelector('video').play()" onmouseleave="this.querySelector('video').pause();this.querySelector('video').currentTime=0">
+        <img src="assets/thumbnails/video3.jpg" alt="Business Explainer">
+        <video src="assets/clips/clip3.mp4" muted loop playsinline></video>
+        <div class="card-info"><div class="card-category">Marketing</div><h3>Business Explainer</h3><p>Educational short with data callouts and clean transitions</p></div>
+      </div>
+    </div>
+    <button class="carousel-arrow right" onclick="this.parentElement.querySelector('.carousel-row').scrollBy({left:260,behavior:'smooth'})">&rarr;</button>
+  </div>
+
+  <div class="row-label"><span>Long-form</span></div>
+
+  <div class="carousel-wrap">
+    <button class="carousel-arrow left" onclick="this.parentElement.querySelector('.carousel-row').scrollBy({left:-520,behavior:'smooth'})">&larr;</button>
+    <div class="carousel-row" id="longform-row">
+      <div class="work-card" onmouseenter="this.querySelector('video').play()" onmouseleave="this.querySelector('video').pause();this.querySelector('video').currentTime=0">
+        <img src="assets/thumbnails/lf_fireforce.jpg" alt="Fire Force S1 Recap">
+        <video src="assets/clips/lf_fireforce.mp4" muted loop playsinline></video>
+        <div class="card-info"><div class="card-category">Anime Recap</div><h3>Fire Force S1 - Full Series Recap</h3><p>2+ hour narrated recap with custom motion graphics, karaoke captions, and scene-matched footage</p></div>
+      </div>
+      <div class="work-card" onmouseenter="this.querySelector('video').play()" onmouseleave="this.querySelector('video').pause();this.querySelector('video').currentTime=0">
+        <img src="assets/thumbnails/lf_burrito.jpg" alt="The Last Burrito">
+        <video src="assets/clips/lf_burrito.mp4" muted loop playsinline></video>
+        <div class="card-info"><div class="card-category">Documentary</div><h3>The Last Burrito</h3><p>Documentary-style storytelling with cinematic pacing and narrative structure</p></div>
+      </div>
+      <div class="work-card" onmouseenter="this.querySelector('video').play()" onmouseleave="this.querySelector('video').pause();this.querySelector('video').currentTime=0">
+        <img src="assets/thumbnails/lf_prp.jpg" alt="PRP & Regenerative Therapies">
+        <video src="assets/clips/lf_prp.mp4" muted loop playsinline></video>
+        <div class="card-info"><div class="card-category">Medical</div><h3>PRP & Regenerative Therapies</h3><p>Professional medical explainer with lower thirds, B-roll integration, and clean branding</p></div>
+      </div>
+      <div class="work-card" onmouseenter="this.querySelector('video').play()" onmouseleave="this.querySelector('video').pause();this.querySelector('video').currentTime=0">
+        <img src="assets/thumbnails/lf_katie.jpg" alt="Client Project">
+        <video src="assets/clips/lf_katie.mp4" muted loop playsinline></video>
+        <div class="card-info"><div class="card-category">YouTube</div><h3>Client YouTube Edit</h3><p>Full YouTube edit with intros, transitions, lower thirds, and thumbnail</p></div>
+      </div>
+      <div class="work-card" onmouseenter="this.querySelector('video').play()" onmouseleave="this.querySelector('video').pause();this.querySelector('video').currentTime=0">
+        <img src="assets/thumbnails/lf_water.jpg" alt="Water Edge">
+        <video src="assets/clips/lf_water.mp4" muted loop playsinline></video>
+        <div class="card-info"><div class="card-category">Commercial</div><h3>Water Edge</h3><p>Product commercial with ambient sound design and cinematic color grading</p></div>
+      </div>
+      <div class="work-card" onmouseenter="this.querySelector('video').play()" onmouseleave="this.querySelector('video').pause();this.querySelector('video').currentTime=0">
+        <img src="assets/thumbnails/lf_b2b.jpg" alt="B2B Business">
+        <video src="assets/clips/lf_b2b.mp4" muted loop playsinline></video>
+        <div class="card-info"><div class="card-category">B2B</div><h3>B2B Business Promo</h3><p>4K corporate video with professional graphics and brand-aligned editing</p></div>
+      </div>
+    </div>
+    <button class="carousel-arrow right" onclick="this.parentElement.querySelector('.carousel-row').scrollBy({left:520,behavior:'smooth'})">&rarr;</button>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="services" class="services">
+  <div class="section-tag">Services</div>
+  <h2 class="section-title">What I do</h2>
+  <p class="section-desc">From raw footage to polished content. Faster delivery without cutting corners.</p>
+  <div class="services-grid">
+    <div class="service-card">
+      <div class="service-icon">&#9889;</div>
+      <h3>Short-form Content</h3>
+      <p>TikTok, Instagram Reels, YouTube Shorts. Hooks, captions, transitions, music, motion graphics. 4-hour turnaround.</p>
+      <div class="service-price">$10 <span>per video</span></div>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">&#127916;</div>
+      <h3>Long-form YouTube</h3>
+      <p>Full edits for 10-30 minute videos. Cuts, pacing, lower thirds, intros/outros, SFX, color correction, thumbnails. 24-hour turnaround.</p>
+      <div class="service-price">$45 <span>per video</span></div>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">&#128197;</div>
+      <h3>Monthly Retainer</h3>
+      <p>Consistent content on a schedule. 15-20 shorts or 4+ long-forms per month. Priority turnaround and unlimited revisions.</p>
+      <div class="service-price">$200 <span>/ month</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="about">
+  <div class="section-tag">About</div>
+  <h2 class="section-title">How I work</h2>
+  <div class="about-content">
+    <div class="about-text">
+      <p><strong>I use AI to edit faster, not lazier.</strong> My workflow automates the repetitive parts -- rough cuts, captions, color matching, asset organization -- so I spend my time on the creative decisions that actually matter: pacing, storytelling, hooks, and the feel of the final product.</p>
+      <p>The result: you get videos back faster and at a lower cost than most editors, with the same (or better) quality. Every edit is custom to your content and brand.</p>
+      <p>Based in Manila (UTC+8). I work US hours, so if you're in North America, I edit while you sleep and you wake up to finished videos.</p>
+      <div class="skills-grid">
+        <span class="skill-tag">Premiere Pro</span>
+        <span class="skill-tag">After Effects</span>
+        <span class="skill-tag">DaVinci Resolve</span>
+        <span class="skill-tag">Motion Graphics</span>
+        <span class="skill-tag">Color Grading</span>
+        <span class="skill-tag">Sound Design</span>
+        <span class="skill-tag">Captions / SRT</span>
+        <span class="skill-tag">Thumbnails</span>
+        <span class="skill-tag">AI Workflows</span>
+        <span class="skill-tag">Short-form</span>
+        <span class="skill-tag">Long-form</span>
+      </div>
+    </div>
+    <div class="about-visual">
+      <div class="about-card">
+        <h4>Send raw footage</h4>
+        <p>Google Drive, Dropbox, WeTransfer -- whatever works. Include any notes on style, music, or references.</p>
+      </div>
+      <div class="about-card">
+        <h4>I edit and deliver</h4>
+        <p>Short-form in 4 hours, long-form in 24 hours. You get a review link with timecoded comments.</p>
+      </div>
+      <div class="about-card">
+        <h4>Revisions until you're happy</h4>
+        <p>One round included per video, unlimited for retainer clients. Changes usually back in a few hours.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="contact" class="cta-section">
+  <div class="free-badge">Free trial -- no commitment</div>
+  <h2>Send me your footage.<br>I'll edit one for free.</h2>
+  <p>No strings. If you like it, we work together. If not, you keep the video.</p>
+  <div class="cta-buttons">
+    <a href="mailto:colinbustos276@gmail.com?subject=Free%20trial%20edit" class="cta-btn cta-primary">Email me &rarr;</a>
+  </div>
+</section>
+
+<footer>
+  <div>Colin Bustos - Video Editor</div>
+  <div><a href="mailto:colinbustos276@gmail.com">colinbustos276@gmail.com</a></div>
+</footer>
+
+</body>
+</html>
