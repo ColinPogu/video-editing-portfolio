@@ -58,13 +58,13 @@ section{padding:6rem 8%;position:relative;z-index:1}
 .section-title{font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:700;margin-bottom:1rem;letter-spacing:-0.5px}
 .section-desc{color:var(--text2);max-width:550px;margin-bottom:3rem;line-height:1.7}
 
-.carousel-wrap{position:relative}
-.carousel-row{display:flex;gap:1.2rem;overflow-x:auto;padding-bottom:1rem;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-behavior:smooth}
+.carousel-wrap{position:relative;overflow:visible}
+.carousel-row{display:flex;gap:1.2rem;overflow-x:auto;padding-bottom:1rem;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-behavior:smooth;position:relative;z-index:1}
 .carousel-row::-webkit-scrollbar{display:none}
-.carousel-arrow{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(232,97,60,0.9);color:#fff;border:none;font-size:1.2rem;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;transition:background 0.3s,transform 0.3s;box-shadow:0 4px 20px rgba(0,0,0,0.5)}
+.carousel-arrow{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(232,97,60,0.9);color:#fff;border:none;font-size:1.2rem;cursor:pointer;z-index:20;display:flex;align-items:center;justify-content:center;transition:background 0.3s,transform 0.3s;box-shadow:0 4px 20px rgba(0,0,0,0.5);pointer-events:auto}
 .carousel-arrow:hover{background:var(--accent2);transform:translateY(-50%) scale(1.1)}
-.carousel-arrow.left{left:-10px}
-.carousel-arrow.right{right:-10px}
+.carousel-arrow.left{left:8px}
+.carousel-arrow.right{right:8px}
 
 .short-card{flex:0 0 220px;scroll-snap-align:start;position:relative;border-radius:12px;overflow:hidden;background:var(--surface);aspect-ratio:9/16;cursor:pointer;transition:transform 0.3s,box-shadow 0.3s}
 .short-card:hover{transform:scale(1.03);box-shadow:0 8px 30px rgba(232,97,60,0.15)}
@@ -207,7 +207,7 @@ footer a:hover{color:var(--accent2)}
   <p class="section-desc">Hover to preview. Use the arrows to browse.</p>
 
   <div class="carousel-wrap">
-    <button class="carousel-arrow left" onclick="this.parentElement.querySelector('.carousel-row').scrollBy({left:-260,behavior:'smooth'})">&larr;</button>
+    <button class="carousel-arrow left" onclick="event.stopPropagation();this.parentElement.querySelector('.carousel-row').scrollBy({left:-260,behavior:'smooth'})">&larr;</button>
     <div class="carousel-row" id="shorts-row">
       <div data-yt="vHpJXFgr9U4" class="short-card" onmouseenter="this.querySelector('video').play()" onmouseleave="this.querySelector('video').pause();this.querySelector('video').currentTime=0">
         <img src="assets/thumbnails/sf_ambition.jpg" alt="Black Ambition">
@@ -246,13 +246,13 @@ footer a:hover{color:var(--accent2)}
         <div class="play-badge">&#9654; Watch full video</div>
       </div>
     </div>
-    <button class="carousel-arrow right" onclick="this.parentElement.querySelector('.carousel-row').scrollBy({left:260,behavior:'smooth'})">&rarr;</button>
+    <button class="carousel-arrow right" onclick="event.stopPropagation();this.parentElement.querySelector('.carousel-row').scrollBy({left:260,behavior:'smooth'})">&rarr;</button>
   </div>
 
   <div class="row-label"><span>Long-form</span></div>
 
   <div class="carousel-wrap">
-    <button class="carousel-arrow left" onclick="this.parentElement.querySelector('.carousel-row').scrollBy({left:-520,behavior:'smooth'})">&larr;</button>
+    <button class="carousel-arrow left" onclick="event.stopPropagation();this.parentElement.querySelector('.carousel-row').scrollBy({left:-520,behavior:'smooth'})">&larr;</button>
     <div class="carousel-row" id="longform-row">
       <div class="work-card" onmouseenter="this.querySelector('video').play()" onmouseleave="this.querySelector('video').pause();this.querySelector('video').currentTime=0">
         <img src="assets/thumbnails/lf_fireforce.jpg" alt="Fire Force S1 Recap">
@@ -290,7 +290,7 @@ footer a:hover{color:var(--accent2)}
         <div class="play-badge">&#9654; Watch full video</div>
       </div>
     </div>
-    <button class="carousel-arrow right" onclick="this.parentElement.querySelector('.carousel-row').scrollBy({left:520,behavior:'smooth'})">&rarr;</button>
+    <button class="carousel-arrow right" onclick="event.stopPropagation();this.parentElement.querySelector('.carousel-row').scrollBy({left:520,behavior:'smooth'})">&rarr;</button>
   </div>
 </section>
 
