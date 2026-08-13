@@ -1,1 +1,15 @@
+# OAuth tokens for the YouTube uploader. LIVE CREDENTIALS, never commit.
+# A leaked refresh token lets anyone upload to or delete from the channel.
+yt_token_*.json
+client_secret*.json
+
+# Upload bookkeeping and local tooling, not part of the site
+portfolio_urls.json
+proof_urls.json
+upload_portfolio.py
+delete_from_everyarc.py
+upload_proofs.py
+
+# Raw masters, far too large for the repo
 assets/raw/
+portfolio_assets/
